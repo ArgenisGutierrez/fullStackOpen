@@ -12,8 +12,8 @@ const App = () => {
   const [newName, setNewName] = useState('')
   const [newNumber, setNewNumber] = useState('')
   const [showAll, setShowAll] = useState(persons)
-  const [newMessage,setMessage]= useState(null)
-  const [typeMessage,setTypeMessage]= useState('success')
+  const [newMessage, setMessage] = useState(null)
+  const [typeMessage, setTypeMessage] = useState('')
 
   //Efectos
   useEffect(() => {
@@ -23,7 +23,7 @@ const App = () => {
         setPersons(initialPersons)
         setShowAll(initialPersons)
       })
-  }, [showAll])
+  }, [])
 
   // Events
   const addPerson = (event) => {
@@ -33,20 +33,20 @@ const App = () => {
       number: newNumber
     }
     if (persons.some(person => person.name === newName)) {
-      if(window.confirm(`${newName} is already added to phonebook, replace the old number with a new one?`)){
-        const id = persons.find(person=>person.name===newName).id
-        personService.updatePerson(id,personObject)
-        .then(returnedPerson=>{
-          setPersons(persons.map(person=>person.id!==id ?person :returnedPerson))
-          setShowAll(persons.map(person=>person.id!==id ?person :returnedPerson))
-          setNewName('')
-          setNewNumber('')
-        })
-        .catch(error=>{
-          setMessage(`Information of ${personObject.name} has already been removed from server`)
-          setTypeMessage('error')
-          setTimeout(()=>setMessage(null),3000)
-        })
+      if (window.confirm(`${newName} is already added to phonebook, replace the old number with a new one?`)) {
+        const id = persons.find(person => person.name === newName).id
+        personService.updatePerson(id, personObject)
+          .then(returnedPerson => {
+            setPersons(persons.map(person => person.id !== id ? person : returnedPerson))
+            setShowAll(persons.map(person => person.id !== id ? person : returnedPerson))
+            setNewName('')
+            setNewNumber('')
+          })
+          .catch(error => {
+            setMessage(error.response.data.error)
+            setTypeMessage('error')
+            setTimeout(() => setMessage(null), 3000)
+          })
       }
     } else {
       personService.createPerson(personObject)
@@ -57,7 +57,12 @@ const App = () => {
           setNewNumber('')
           setTypeMessage('success')
           setMessage(`Add ${personObject.name}`)
-          setTimeout(()=>setMessage(null),3000)
+          setTimeout(() => setMessage(null), 3000)
+        })
+        .catch(error => {
+          setMessage(error.response.data.error)
+          setTypeMessage('error')
+          setTimeout(() => setMessage(null), 3000)
         })
     }
   }
@@ -84,13 +89,18 @@ const App = () => {
           setPersons(persons.filter(person => person.id !== returnedPerson.id))
           setShowAll(persons.filter(person => person.id !== returnedPerson.id))
         })
+        .catch(error => {
+          setMessage(error.response.data.error)
+          setTypeMessage('error')
+          setTimeout(() => setMessage(null), 3000)
+        })
     }
   }
 
   return (
     <div>
       <h2>Phonebook</h2>
-      <Message message={newMessage} className={typeMessage}/>
+      <Message message={newMessage} className={typeMessage} />
       <Filter handleFilterChange={handleFilterChange} />
       <h3>Add a new person</h3>
       <PersonForm addPerson={addPerson} handleNumberChange={handleNumberChange} handlePersonChange={handlePersonChange} newNumber={newNumber} newName={newName} />
@@ -99,5 +109,4 @@ const App = () => {
     </div>
   )
 }
-
 export default App
